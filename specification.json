@@ -1,0 +1,164 @@
+{
+    "name": "Programming Assignment 1 - The Test",
+    "criterias": [
+        {
+            "name": "Output 1",
+            "description": "Check if the output file exists",
+            "public": true,
+            "criteria": "AssertFile.exists",
+            "evalparams": false,
+            "parameters": ["output.txt"],
+            "expected": {"eq": true, "value": true, "evalvalue": false},
+            "points": 5
+        },
+        {
+            "name": "Output 2",
+            "description": "Output line count",
+            "public": false,
+            "criteria": "ByteStream.lc",
+            "evalparams": true,
+            "parameters": ["open('output.txt', 'r')"],
+            "expected": {"eq": true, "value": 11, "evalvalue": false},
+            "points": 10
+        },
+        {
+            "name": "Random - Binding",
+            "description": "Test if the binding exists",
+            "public": true,
+            "criteria": "AssertBinding.exists",
+            "evalparams": false,
+            "parameters": ["rand"],
+            "expected": {"eq": true, "value": true, "evalvalue": false},
+            "points": 5
+        },
+        {
+            "name": "Random - Type",
+            "description": "Test if the binding has the correct type",
+            "public": true,
+            "criteria": "AssertType.isinstance",
+            "evalparams": true,
+            "parameters": ["bindings['rand']", "int"],
+            "expected": {"eq": true, "value": true, "evalvalue": false},
+            "points": 5
+        },
+        {
+            "name": "Timeout? - Sleep",
+            "description": "Test if the sleep command was timed out",
+            "public": true,
+            "criteria": "AssertBinding.eq",
+            "evalparams": false,
+            "parameters": ["sleep_ret", 504],
+            "expected": {"eq": false, "value": true, "evalvalue": false},
+            "points": 0,
+            "deduct": 5
+        },
+        {
+            "name": "Fibonacci",
+            "description": "Test fibonacci output",
+            "public": true,
+            "criteria": "ByteStream.read_int",
+            "evalparams": true,
+            "parameters": ["open('fib_output.txt', 'r')"],
+            "expected": {"eq": true, "value": "bindings['fib_expected']", "evalvalue": true},
+            "points": 10
+        },
+        {
+            "name": "Timeout? - Fib",
+            "description": "Test if the fib was timed out",
+            "public": true,
+            "criteria": "AssertBinding.eq",
+            "evalparams": false,
+            "parameters": ["fib_ret", 504],
+            "expected": {"eq": false, "value": true, "evalvalue": false},
+            "points": 0,
+            "deduct": 5
+        }
+    ],
+    "tasks": [
+        {
+            "task": "ExecuteCommand.block",
+            "evalparams": true,
+            "parameters": [
+                "'/bin/ls'",
+                "['-l']",
+                "None",
+                "open('output.txt', 'w')",
+                "None"
+            ],
+            "bindret": "ls"
+        },
+        {
+            "task": "include",
+            "evalparams": false,
+            "parameters": ["random"]
+        },
+        {
+            "task": "random.randint",
+            "evalparams": false,
+            "parameters": [1, 100],
+            "bindret": "rand"
+        },
+        {
+            "task": "ExecuteCommand.block",
+            "evalparams": true,
+            "parameters": [
+                "'/bin/echo'",
+                "[str(bindings['rand'])]"
+            ]
+        },
+        {
+            "task": "ExecuteCommand.block",
+            "evalparams": true,
+            "parameters": [
+                "'/bin/sleep'",
+                "['0.99']",
+                "None",
+                "None",
+                "None",
+                "int(1)"
+            ],
+            "bindret": "sleep_ret"
+        },
+        {
+            "task": "FileOperations.write",
+            "evalparams": true,
+            "parameters": [
+                "'fib_input.txt'",
+                "str(bindings['rand'])"
+            ]
+        },
+        {
+            "task": "ExecuteCommand.block",
+            "evalparams": true,
+            "parameters": [
+                "bindings['interpreter']",
+                "['student.py']",
+                "open('fib_input.txt', 'r')",
+                "open('fib_output.txt', 'w')",
+                "None",
+                "float(0.03)"
+            ],
+            "bindret": "fib_ret"
+        },
+        {
+            "task": "include",
+            "evalparams": false,
+            "parameters": ["fibonacci"]
+        },
+        {
+            "task": "fibonacci.Fibonacci.fib",
+            "evalparams": true,
+            "parameters": [
+                "bindings['rand']"
+            ],
+            "bindret": "fib_expected"
+        }
+    ],
+    "cleanup": [
+        {
+            "task": "FileOperations.delete",
+            "evalparams": false,
+            "parameters": ["fib_input.txt", "fib_output.txt"]
+        }
+    ]
+}

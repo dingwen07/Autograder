@@ -1,5 +1,6 @@
 import json
 import sys
+import argparse
 
 import tasks
 import criterias
@@ -29,13 +30,28 @@ def run_tasks(task_list):
 
 if __name__ == '__main__':
     criterias.bindings = bindings
-    specification = json.load(open('specification.json'))
 
+    parser = argparse.ArgumentParser(description='Autograder')
+    parser.add_argument('specification', nargs='?', default='specification.json', help='Specification file')
+    parser.add_argument('-b', '--binding', action='append', help='Binding to be passed to specification')
+    args = parser.parse_args()
+
+    specification = json.load(open(args.specification, 'r'))
+
+    if args.binding:
+        for binding in args.binding:
+            if '=' in binding:
+                key, value = binding.split('=', 1)
+                bindings[key] = value
+            else:
+                print(f'Invalid binding: {binding}')
+    
     error_log = ''
     run_tasks(specification['tasks'])
 
     points_obtained = 0
     points_total = 0
+    test_passed = 0
     autograder_report = specification['name'] + '\n'
     autograder_report += 'Autograder Report\n\n'
     if error_log != '':
@@ -82,6 +98,7 @@ if __name__ == '__main__':
         if (ret == criteria['expected']['value']) == (criteria['expected']['eq']):
             points_obtained += criteria['points']
             autograder_report += f'Result: Passed\n'
+            test_passed += 1
         else:
             autograder_report += f'Result: Failed\n'
             if 'deduct' in criteria:
@@ -90,7 +107,8 @@ if __name__ == '__main__':
         autograder_report += '\n'
 
     print(autograder_report)
-    print(f'Points obtained: {points_obtained}/{points_total}')
+    print(f'Tests Passed: {test_passed}/{test_id}')
+    print(f'Points Earned: {points_obtained}/{points_total}')
 
     # cleanup
     input('Press Enter to Cleanup and Exit...')

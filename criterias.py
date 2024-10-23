@@ -1,4 +1,5 @@
 import os
+import re
 
 global bindings
 
@@ -26,9 +27,26 @@ class ByteStream:
         content = ByteStream.get_content(s)
         return len(content.splitlines())
     
-    def contains(s, substr) -> bool:
+    def contains(s, substr, ignore_ws=False) -> bool:
         content = ByteStream.get_content(s)
+        if ignore_ws:
+            content = re.sub(r'\s+', '', content)
+            substr = re.sub(r'\s+', '', substr)
         return substr in content
+    
+    def contains_all(s, substrs, ignore_ws=False) -> bool:
+        content = ByteStream.get_content(s)
+        if ignore_ws:
+            content = re.sub(r'\s+', '', content)
+            substrs = [re.sub(r'\s+', '', substr) for substr in substrs]
+        return all(substr in content for substr in substrs)
+    
+    def count(s, substr, ignore_ws=False) -> int:
+        content = ByteStream.get_content(s)
+        if ignore_ws:
+            content = re.sub(r'\s+', '', content)
+            substr = re.sub(r'\s+', '', substr)
+        return content.count(substr)
     
     def read_int(s) -> int:
         content = ByteStream.get_content(s)

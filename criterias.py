@@ -58,6 +58,10 @@ class ByteStream:
     def read_int(s) -> int:
         content = ByteStream.get_content(s)
         return int(content)
+    
+    def match(s, pattern) -> bool:
+        content = ByteStream.get_content(s)
+        return re.match(pattern, content) is not None
 
 class AssertFile:
 

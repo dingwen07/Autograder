@@ -5,8 +5,8 @@ import importlib
 global bindings
 
 class ExecuteCommand:
-    def block(executable: str, arguments: list, stdin=None, stdout=None, stderr=None, timeout=None) -> int:
-        process = subprocess.Popen([executable] + arguments, stdin=stdin, stdout=stdout, stderr=stderr)
+    def block(executable: str, arguments: list, stdin=None, stdout=None, stderr=None, timeout=None, cwd=None) -> int:
+        process = subprocess.Popen([executable] + arguments, stdin=stdin, stdout=stdout, stderr=stderr, cwd=cwd)
         try:
             process.wait(timeout)
         except subprocess.TimeoutExpired:
@@ -17,8 +17,8 @@ class ExecuteCommand:
         return process.returncode
         
     
-    def non_block(executable: str, arguments: list, stdin=None, stdout=None, stderr=None) -> subprocess.Popen:
-        process = subprocess.Popen([executable] + arguments, stdin=stdin, stdout=stdout, stderr=stderr)
+    def non_block(executable: str, arguments: list, stdin=None, stdout=None, stderr=None, cwd=None) -> subprocess.Popen:
+        process = subprocess.Popen([executable] + arguments, stdin=stdin, stdout=stdout, stderr=stderr, cwd=cwd)
         return process
 
 class FileOperations:

@@ -32,6 +32,7 @@ def run_tasks(task_list):
 
 
 if __name__ == '__main__':
+    tasks.bindings = bindings
     criterias.bindings = bindings
 
     parser = argparse.ArgumentParser(description='Autograder')

@@ -1,6 +1,8 @@
 import subprocess
 import os
+import importlib
 
+global bindings
 
 class ExecuteCommand:
     def block(executable: str, arguments: list, stdin=None, stdout=None, stderr=None, timeout=None) -> int:
@@ -28,5 +30,17 @@ class FileOperations:
         for path in paths:
             os.remove(path)
 
+class Debug:
+    def print(*args, **kwargs):
+        print(*args, **kwargs)
+
+    def print_bindings():
+        print(bindings)
+
 def include(module: str):
-    globals()[module] = __import__(module)
+    components = module.split('.')
+    package_name = components[0]  # Get the top-level package
+    globals()[package_name] = importlib.import_module(package_name)  # Import the top-level package
+    
+    # Import the full module and assign it globally
+    globals()[module] = importlib.import_module(module)

@@ -1,5 +1,6 @@
 import json
 import sys
+import os
 import argparse
 
 import tasks
@@ -22,6 +23,8 @@ def run_tasks(task_list):
             ret = eval(task_id)(*parameters)
             if 'bindret' in task:
                 bindings[task['bindret']] = ret
+            if 'setenv' in task:
+                os.environ[task['addenv']] = str(ret)
             if ret == 504:
                 error_log += f'Task {task["task"]} execution timed out ({task})\n'
         except Exception as e:

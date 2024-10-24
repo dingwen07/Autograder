@@ -69,7 +69,7 @@ if __name__ == '__main__':
         test_id += 1
         points_total += criteria['points']
         autograder_report += f'Test {test_id}: {criteria["name"]}\n'
-        autograder_report += f'Points:\t\t{criteria["points"]}{f' (Deduct {criteria['deduct']}pts if Failed)' if 'deduct' in criteria else ''}\n'
+        autograder_report += f'Points:\t\t{criteria["points"]}{f' (Deduct {criteria['deduct']} pts if Failed)' if 'deduct' in criteria else ''}\n'
 
         if criteria['expected']['evalvalue']:
             try:
@@ -108,12 +108,16 @@ if __name__ == '__main__':
             autograder_report += f'Result:\t\tFailed\n'
             if 'deduct' in criteria:
                 points_obtained -= criteria['deduct']
-                autograder_report += f'Deducted: {criteria["deduct"]}pts\n'
+                autograder_report += f'Deducted: {criteria["deduct"]} pts\n'
         autograder_report += '\n'
 
+    autograder_report += f'Tests Passed:\t{test_passed}/{test_id}\n'
+    autograder_report += f'Points Earned:\t{points_obtained}/{points_total}\n'
     print(autograder_report)
-    print(f'Tests Passed:\t{test_passed}/{test_id}')
-    print(f'Points Earned:\t{points_obtained}/{points_total}')
+
+    if 'report' in specification:
+        with open(specification['report'], 'w') as file:
+            file.write(autograder_report)
 
     # cleanup
     input('Press Enter to Cleanup and Exit...')

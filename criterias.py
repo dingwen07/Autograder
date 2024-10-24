@@ -41,6 +41,13 @@ class ByteStream:
             substrs = [re.sub(r'\s+', '', substr) for substr in substrs]
         return all(substr in content for substr in substrs)
     
+    def missing_n(s, substrs, ignore_ws=False) -> int:
+        content = ByteStream.get_content(s)
+        if ignore_ws:
+            content = re.sub(r'\s+', '', content)
+            substrs = [re.sub(r'\s+', '', substr) for substr in substrs]
+        return len([substr for substr in substrs if substr not in content])
+    
     def count(s, substr, ignore_ws=False) -> int:
         content = ByteStream.get_content(s)
         if ignore_ws:

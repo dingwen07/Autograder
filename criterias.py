@@ -59,9 +59,9 @@ class ByteStream:
         content = ByteStream.get_content(s)
         return int(content)
     
-    def match(s, pattern) -> bool:
+    def search(s, pattern) -> bool:
         content = ByteStream.get_content(s)
-        return re.match(pattern, content) is not None
+        return re.search(pattern, content) is not None
 
 class AssertFile:
 

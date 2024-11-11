@@ -14,7 +14,7 @@ RUN apt-get install -y zsh nano vim
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
-COPY autograder.py tasks.py criterias.py docker-entrypoint.sh /app/
+COPY autograder.py tasks.py criteria.py docker-entrypoint.sh /app/
 
 # Set DATA directory
 ENV LIMBO=/data

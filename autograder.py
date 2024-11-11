@@ -6,7 +6,7 @@ import copy
 import shutil
 
 import tasks
-import criterias
+import criteria
 
 bindings = {}
 bindings['interpreter'] = sys.executable
@@ -35,7 +35,7 @@ def run_tasks(task_list):
 
 if __name__ == '__main__':
     tasks.bindings = bindings
-    criterias.bindings = bindings
+    criteria.bindings = bindings
 
     parser = argparse.ArgumentParser(description='Autograder')
     parser.add_argument('specification', nargs='?', default='specification.json', help='Specification file')
@@ -71,52 +71,61 @@ if __name__ == '__main__':
 
 
     test_id = 0
-    for criteria in specification['criterias']:
-        test_id += 1
-        points_total += criteria['points']
-        autograder_report += f'Test {test_id}: {criteria["name"]}\n'
-        autograder_report += f'Points:\t\t{criteria["points"]}{f' (Deduct {criteria['deduct']} pts if Failed)' if 'deduct' in criteria else ''}\n'
+    # Legacy config compatibility
+    if 'criteria' not in specification:
+        specification['criteria'] = specification['criterias']
+        print('WARNING: Legacy config in specification file: criterias', file=sys.stderr)
 
-        if criteria['expected']['evalvalue']:
+    for criterion in specification['criteria']:
+        test_id += 1
+        points_total += criterion['points']
+        autograder_report += f'Test {test_id}: {criterion["name"]}\n'
+        autograder_report += f'Points:\t\t{criterion["points"]}{f' (Deduct {criterion['deduct']} pts if Failed)' if 'deduct' in criterion else ''}\n'
+
+        if criterion['expected']['evalvalue']:
             try:
-                criteria['expected']['value'] = eval(criteria['expected']['value'])
+                criterion['expected']['value'] = eval(criterion['expected']['value'])
             except Exception as e:
-                # print(f'Criteria {criteria["criteria"]} expected value eval failed with error: {e}')
-                autograder_report += f'Criteria {criteria["criteria"]} expected value eval failed with error: {e}\n'
-                criteria['expected']['value'] = False
+                # print(f'criterion {criterion["criterion"]} expected value eval failed with error: {e}')
+                autograder_report += f'criterion {criterion["criterion"]} expected value eval failed with error: {e}\n'
+                criterion['expected']['value'] = False
         
-        if criteria['evalparams']:
-            parameters = map(eval, criteria['parameters'])
+        if criterion['evalparams']:
+            parameters = map(eval, criterion['parameters'])
         else:
-            parameters = criteria['parameters']
+            parameters = criterion['parameters']
         parameters_copy = copy.deepcopy(parameters)
 
-        criteria_id = 'criterias.' + criteria['criteria']
+        # Legacy config compatibility
+        if 'criterion' not in criterion:
+            criterion['criterion'] = criterion['criteria']
+            print('WARNING: Legacy config in specification file: criteria.criteria', file=sys.stderr)
+        criterion_id = 'criteria.' + criterion['criterion']
         try:
-            ret = eval(criteria_id)(*parameters)
+            ret = eval(criterion_id)(*parameters)
         except Exception as e:
-            # print(f'Criteria {criteria["criteria"]} evaluation failed with error: {e}')
-            autograder_report += f'Criteria {criteria["criteria"]} evaluation failed with error: {e}\n'
+            # print(f'criterion {criterion["criterion"]} evaluation failed with error: {e}')
+            autograder_report += f'criterion {criterion["criterion"]} evaluation failed with error: {e}\n'
             ret = None
 
-        if criteria['public']:
-            autograder_report += f'Description:\t{criteria["description"]}\n'
+        if criterion['public']:
+            autograder_report += f'Description:\t{criterion["description"]}\n'
             parameters_str = ', '.join(map(repr, parameters_copy))
-            autograder_report += f'Criteria:\t{criteria["criteria"]}({parameters_str})\n'
-            autograder_report += f'Expected:\t{'' if criteria['expected']['eq'] else 'Not '}{repr(criteria["expected"]["value"])}\n'
+            autograder_report += f'Criterion:\t{criterion["criterion"]}({parameters_str})\n'
+            autograder_report += f'Expected:\t{'' if criterion['expected']['eq'] else 'Not '}{repr(criterion["expected"]["value"])}\n'
             autograder_report += f'Actual:\t\t{repr(ret)}\n'
         else:
             autograder_report += f'Description:\tPrivate Test\n'
 
-        if (ret == criteria['expected']['value']) == (criteria['expected']['eq']):
-            points_obtained += criteria['points']
+        if (ret == criterion['expected']['value']) == (criterion['expected']['eq']):
+            points_obtained += criterion['points']
             autograder_report += f'Result:\t\tPassed\n'
             test_passed += 1
         else:
             autograder_report += f'Result:\t\tFailed\n'
-            if 'deduct' in criteria:
-                points_obtained -= criteria['deduct']
-                autograder_report += f'Deducted: {criteria["deduct"]} pts\n'
+            if 'deduct' in criterion:
+                points_obtained -= criterion['deduct']
+                autograder_report += f'Deducted: {criterion["deduct"]} pts\n'
         autograder_report += '\n'
 
     autograder_report += f'Tests Passed:\t{test_passed}/{test_id}\n'

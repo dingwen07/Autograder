@@ -162,3 +162,5 @@ cython_debug/
 #.idea/
 
 output.txt
+fib_input.txt
+fib_output.txt

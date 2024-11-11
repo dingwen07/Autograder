@@ -165,6 +165,7 @@
             "bindret": "fib_expected"
         }
     ],
+    "retrieve": ["fib_output.txt"],
     "cleanup": [
         {
             "task": "FileOperations.delete",

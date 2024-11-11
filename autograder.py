@@ -2,6 +2,8 @@ import json
 import sys
 import os
 import argparse
+import copy
+import shutil
 
 import tasks
 import criterias
@@ -24,7 +26,7 @@ def run_tasks(task_list):
             if 'bindret' in task:
                 bindings[task['bindret']] = ret
             if 'setenv' in task:
-                os.environ[task['addenv']] = str(ret)
+                os.environ[task['setenv']] = str(ret)
             if ret == 504:
                 error_log += f'Task {task["task"]} execution timed out ({task})\n'
         except Exception as e:
@@ -58,6 +60,10 @@ if __name__ == '__main__':
     test_passed = 0
     autograder_report = specification['name'] + '\n'
     autograder_report += 'Autograder Report\n\n'
+    autograder_report += 'Local Bindings:\n'
+    for key, value in bindings.items():
+        autograder_report += f'\t{key} = {repr(value)}\n'
+    autograder_report += '\n'
     if error_log != '':
         autograder_report += 'Task Execution Error Log:\n'
         autograder_report += error_log + '\n\n'
@@ -83,6 +89,7 @@ if __name__ == '__main__':
             parameters = map(eval, criteria['parameters'])
         else:
             parameters = criteria['parameters']
+        parameters_copy = copy.deepcopy(parameters)
 
         criteria_id = 'criterias.' + criteria['criteria']
         try:
@@ -94,9 +101,10 @@ if __name__ == '__main__':
 
         if criteria['public']:
             autograder_report += f'Description:\t{criteria["description"]}\n'
-            autograder_report += f'Criteria:\t{criteria["criteria"]}\n'
-            autograder_report += f'Expected:\t{'' if criteria['expected']['eq'] else 'Not '}{criteria["expected"]["value"]}\n'
-            autograder_report += f'Actual:\t\t{ret}\n'
+            parameters_str = ', '.join(map(repr, parameters_copy))
+            autograder_report += f'Criteria:\t{criteria["criteria"]}({parameters_str})\n'
+            autograder_report += f'Expected:\t{'' if criteria['expected']['eq'] else 'Not '}{repr(criteria["expected"]["value"])}\n'
+            autograder_report += f'Actual:\t\t{repr(ret)}\n'
         else:
             autograder_report += f'Description:\tPrivate Test\n'
 
@@ -118,7 +126,15 @@ if __name__ == '__main__':
     if 'report' in specification:
         with open(specification['report'], 'w') as file:
             file.write(autograder_report)
+    
+    # retrieve files if running in docker
+    if 'LIMBO' in os.environ:
+        for file in specification['retrieve']:
+            shutil.copy(file, os.environ['LIMBO'])
 
     # cleanup
-    input('Press Enter to Cleanup and Exit...')
+    r = input('Press Enter to Cleanup and Exit...')
+    r = r.strip()
+    if r != '' and shutil.which(r):
+        os.system(r)
     run_tasks(specification['cleanup'])

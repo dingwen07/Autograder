@@ -4,6 +4,7 @@ import os
 import argparse
 import copy
 import shutil
+import io
 
 import tasks
 import criteria
@@ -32,6 +33,18 @@ def run_tasks(task_list):
         except Exception as e:
             error_log += f'Task {task["task"]} execution failed with error: {e}\n'
 
+def get_parameters_string(parameters):
+    strs = []
+    for parameter in parameters:
+        # if is a opened file, use the file name
+        if isinstance(parameter, io.TextIOWrapper):
+            strs.append('open(' + repr(parameter.name) + ')')
+        else:
+            try:
+                strs.append(repr(parameter))
+            except Exception:
+                strs.append(str(parameter))
+    return ', '.join(strs)
 
 if __name__ == '__main__':
     tasks.bindings = bindings
@@ -62,7 +75,10 @@ if __name__ == '__main__':
     autograder_report += 'Autograder Report\n\n'
     autograder_report += 'Local Bindings:\n'
     for key, value in bindings.items():
-        autograder_report += f'\t{key} = {repr(value)}\n'
+        try:
+            autograder_report += f'\t{key} = {repr(value)}\n'
+        except Exception as e:
+            autograder_report += f'\t{key} = {value}\n'
     autograder_report += '\n'
     if error_log != '':
         autograder_report += 'Task Execution Error Log:\n'
@@ -91,10 +107,22 @@ if __name__ == '__main__':
                 criterion['expected']['value'] = False
         
         if criterion['evalparams']:
-            parameters = map(eval, criterion['parameters'])
+            parameters = []
+            parameters_print = [] # for report
+            for parameter in criterion['parameters']:
+                try:
+                    eval_param = eval(parameter)
+                except Exception as e:
+                    autograder_report += f'criterion parameter {parameter} eval failed with error: {e}\n'
+                    eval_param = None
+                parameters.append(eval_param)
+                if eval_param is None:
+                    parameters_print.append(parameter)
+                else:
+                    parameters_print.append(eval_param)
         else:
             parameters = criterion['parameters']
-        parameters_copy = copy.deepcopy(parameters)
+            parameters_print = criterion['parameters']
 
         # Legacy config compatibility
         if 'criterion' not in criterion:
@@ -110,7 +138,7 @@ if __name__ == '__main__':
 
         if criterion['public']:
             autograder_report += f'Description:\t{criterion["description"]}\n'
-            parameters_str = ', '.join(map(repr, parameters_copy))
+            parameters_str = get_parameters_string(parameters_print)
             autograder_report += f'Criterion:\t{criterion["criterion"]}({parameters_str})\n'
             autograder_report += f'Expected:\t{'' if criterion['expected']['eq'] else 'Not '}{repr(criterion["expected"]["value"])}\n'
             autograder_report += f'Actual:\t\t{repr(ret)}\n'
@@ -125,7 +153,7 @@ if __name__ == '__main__':
             autograder_report += f'Result:\t\tFailed\n'
             if 'deduct' in criterion:
                 points_obtained -= criterion['deduct']
-                autograder_report += f'Deducted: {criterion["deduct"]} pts\n'
+                autograder_report += f'Deducted:\t{criterion["deduct"]} pts\n'
         autograder_report += '\n'
 
     autograder_report += f'Tests Passed:\t{test_passed}/{test_id}\n'
@@ -139,8 +167,11 @@ if __name__ == '__main__':
     # retrieve files if running in docker
     if 'LIMBO' in os.environ:
         for file in specification['retrieve']:
-            shutil.copy(file, os.environ['LIMBO'])
-            print(f'Retrieved {file}', file=sys.stderr)
+            try:
+                shutil.copy(file, os.environ['LIMBO'])
+                print(f'Retrieved {file}', file=sys.stderr)
+            except Exception as e:
+                print(f'File {file} retrieval failed with error: {e}', file=sys.stderr)
 
     # cleanup
     r = input('Press Enter to Cleanup and Exit...')

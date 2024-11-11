@@ -140,6 +140,7 @@ if __name__ == '__main__':
     if 'LIMBO' in os.environ:
         for file in specification['retrieve']:
             shutil.copy(file, os.environ['LIMBO'])
+            print(f'Retrieved {file}', file=sys.stderr)
 
     # cleanup
     r = input('Press Enter to Cleanup and Exit...')

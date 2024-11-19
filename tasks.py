@@ -2,6 +2,8 @@ import subprocess
 import os
 import importlib
 
+import criteria
+
 global bindings
 
 class ExecuteCommand:

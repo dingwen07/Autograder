@@ -143,14 +143,14 @@ if __name__ == '__main__':
             autograder_report += f'Expected:\t{'' if criterion['expected']['eq'] else 'Not '}{repr(criterion["expected"]["value"])}\n'
             autograder_report += f'Actual:\t\t{repr(ret)}\n'
         else:
-            autograder_report += f'Description:\tPrivate Test\n'
+            autograder_report += 'Description:\tPrivate Test\n'
 
         if (ret == criterion['expected']['value']) == (criterion['expected']['eq']):
             points_obtained += criterion['points']
-            autograder_report += f'Result:\t\tPassed\n'
+            autograder_report += 'Result:\t\tPassed\n'
             test_passed += 1
         else:
-            autograder_report += f'Result:\t\tFailed\n'
+            autograder_report += 'Result:\t\tFailed\n'
             if 'deduct' in criterion:
                 points_obtained -= criterion['deduct']
                 autograder_report += f'Deducted:\t{criterion["deduct"]} pts\n'
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     print(autograder_report)
 
     if 'report' in specification:
-        with open(specification['report'], 'w') as file:
+        with open(specification['report'], 'w', encoding='utf-8') as file:
             file.write(autograder_report)
     
     # retrieve files if running in docker
